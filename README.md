@@ -26,4 +26,53 @@ Demonstrated frequently used mechanisms of Web API -
  First of all, we need to define two things : 1. default page size, 2. max page size value
  This way, you are setting or coniguring the pagination mechansim for your application.
  
+ Please refer to the _PageQueryParameters.cs_ class
  
+ ```
+ public class PaginationQueryParameters
+	{
+		private int _maxPageSize = 100; // Max size of the page
+		public int _size = 50; // default size of the page
+
+		public int Size {
+			get { return _size; } // returning the default size on request of get
+			set
+			{
+				_size = Math.Min(_maxPageSize, value); } // comparing the size provided and passing the min value of _maxSize and size value provided
+			}
+
+		public int Page { get ; set; } = 1; // Page value initialized to 1
+	}
+ ```
+To use this pagination configuration in action, please refer to the _PersonController.cs_ class.
+
+```
+[HttpGet("GetAllPersons")]
+        public IEnumerable<object> Get([FromQuery] PaginationQueryParameters queryParameters)
+        {
+            IQueryable<Person> person = _context.People;
+
+
+            /*
+             * ** Pagination **
+             * 1. You need to skip the records first as per page number and page size, hence 'skip' is used
+             * 2. Now, You need to consider the number of records to send. For the value of size, please refer to
+             *    'PaginationQueryParameters' class wherein the value of Size is decided based on the 
+             *    input provided and our max threshold
+             */
+            var data = person
+                        .Skip(queryParameters.Size * (queryParameters.Page - 1))
+                        .Take(queryParameters.Size);
+
+            return data.ToArray();
+        }
+```
+
+
+
+
+
+
+
+
+
