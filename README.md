@@ -69,9 +69,96 @@ To use this pagination configuration in action, please refer to the _PersonContr
 ```
 
 
+ 
+ #### 2. Filtering
+	
+Filtering means to get the required data/records from the whole set of output based on one or many conditions.
+Here LINQ queries are very useful in terms of writing the logic and its readability as well.
+	
+Please refer to this code snippet from _GetPersons_ method of _PersonController.cs_ class -
+	
+	Here, out of all the person records we are filtering it with given PersonType value
+	
+	```
+	    /*
+             * ** Filter **
+             * Filter the person records with its 'personType'
+             * possible values from the DB are - [ IN, EM, SP, SC, VC, GC ]
+             */
+            if (!string.IsNullOrEmpty(queryParameters.PersonType))
+            {
+                person = person.Where(
+                            p => p.PersonType.ToLower().Equals(queryParameters.PersonType.ToLower())
+                        );
+            }
 
+	```
+	
+ #### 3. Searching
 
+Searching is kind of filtering the data/records but we need to search for the input conditions with all the records and extract the matching records.
+Please refer to this code snippet from _GetPersons_ method of _PersonController.cs_ class -
+	
+	Here, we are searching for the records which contains the input string in its first name or last name.
+	
+	```
+	    /*
+             * ** Search **
+             * Search in the 'FirstName' and 'LastName' field that contains the given input string
+             */
+            if (!string.IsNullOrEmpty(queryParameters.NameContains))
+            {
+                person = person.Where(
+                            p => p.FirstName.ToLower().Contains(queryParameters.NameContains.ToLower()) ||
+                                 p.LastName.ToLower().Contains(queryParameters.NameContains.ToLower())
+                        );
+            }
+	```
 
+ #### 4. Sorting
+
+Sorting is something which refers to ordering of the records. The default order for sorting the records is 'ASCENDING' but you can explicitly define the ordering if you don't want the default one (i.e. DESCENDING). 
+Also, It needs the column of table to sort by.
+Please refer to this code snippet from _GetPersons_ method of _PersonController.cs_ class -
+	
+	```
+	    /*
+             * ** Sort **
+             * Here we can sort our records with user provided column, provided the column should be present inside table
+             * We have first checked whether the column exist or not with case-insensitive approach
+             * then we used custom extension method to sort
+             */
+            if (!string.IsNullOrEmpty(queryParameters.SortBy))
+            {
+                var defaultLookup = BindingFlags.IgnoreCase | BindingFlags.Public | BindingFlags.Instance;
+
+                if (typeof(Person).GetProperty(queryParameters.SortBy, defaultLookup) != null)
+                {
+                    person = person.OrderByCustom(
+                                queryParameters.SortBy,
+                                queryParameters.SortOrder
+                        );
+                }
+            }
+
+	```
+	
+	Here, we are sorting for the records with given input value (1. column name and 2. sort by).
+	For input, 
+	1. Column name (_queryParameters.SortBy_) we need to first check whether the input column name is present in the table (added extra logic to ignore the case of the given string)
+	2. Sort order (_queryParameters.SortOrder_) We need to first check whether the input string is valid for the two possible options (i.e. ASC (ascending) or DESC (descending)). Hence, added the extra logic in _PersonQueryParameters.cs_ class.
+	
+	```
+	public string SortOrder {
+			get { return _sortOrder; }
+			set {
+				if (value == "asc" || value == "desc")
+				{
+					_sortOrder = value;
+				}
+			} }
+	}
+	```
 
 
 
